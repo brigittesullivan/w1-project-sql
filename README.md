@@ -2,6 +2,7 @@
 
 ## Project/Goals
 (fill in your description and goals here)
+Jan 20-1: testing upload to git from local machine
 
 ## Process
 ### (your step 1)
