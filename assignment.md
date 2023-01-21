@@ -30,11 +30,12 @@ The answer to the question
 ## Part 4: Starting with Data
 
 Consider the data you have available to you.  You can use the data to:
-    - find all duplicate records
-    - find the total number of unique visitors (`fullVisitorID`)
-    - find the total number of unique visitors by referring sites
-    - find each unique product viewed by each visitor
-    - compute the percentage of visitors to the site that actually makes a purchase
+
+1. find all duplicate records
+2. find the total number of unique visitors (`fullVisitorID`)
+3. find the total number of unique visitors by referring sites
+4. find each unique product viewed by each visitor
+5. compute the percentage of visitors to the site that actually makes a purchase
     
 
 In the **starting_with_data.md** file, write 3 - 5 new questions that you could answer with this database. For each question, include
@@ -56,3 +57,5 @@ Inside pgAdmin, you can generate the ERD for the database.
 Download the image and save it as **schema.png**. Add this file to your repo for submission.
 
 Note: If you have created any new tables, be sure to load them into the database before printing the ERD!
+
+Jan 20 @ 20:45 - testing the git went through - B
