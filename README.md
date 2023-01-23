@@ -5,14 +5,40 @@
 Jan 20-1: testing upload to git from local machine
 
 ## Process
-### (your step 1)
+### 1. Load data into PgAdmin(your step 1)
+For each data file:
+* open file in excel, save as UTF CSV
+* quick review of data in excel to identify data types
+* Create table in PGAdmin
+  * sometimes used the PGAdmin Create table dialog, to create tables and columns
+  * other times, where the # of columns was large (all_sessions), used excel formula to build create table alter table queries more efficiently
+* lots of time spent figuring out best data type to use that would result in a successful upload
+
+### Cleaning 
+1. **unit price conversion:** Added new column `unit_price_clean` to the `analytics` table
+```sql 
+-- updating unit price to dollars as a new column to show work, unit_price_clean will be used in all calculations
+alter table analytics 
+add column unit_price_clean numeric ; 
+update analytics 
+set unit_price_clean = ROUND(unit_price/1000000,2)
+```
+2. 
+
+
 ### (your step 2)
 
 ## Results
 (fill in what you discovered this data could tell you and how you used the data to answer those questions)
 
+* why are all 
+
 ## Challenges 
 (discuss challenges you faced in the project)
+
+* Difficult understanding requirements of project
+* 
+
 
 ## Future Goals
 (what would you do if you had more time?)
