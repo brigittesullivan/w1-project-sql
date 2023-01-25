@@ -1,9 +1,5 @@
 What issues will you address by cleaning the data?
 
-
-
-
-
 Queries:
 Below, provide the SQL queries you used to clean your data.
 
@@ -91,7 +87,7 @@ OR city = 'not available in demo dataset'
 Result: update 8656 (8302 + 354)
 
 
-e.g., - update "(not set)" and "not available in demo dataset" to null
+QA: e.g., - update "(not set)" and "not available in demo dataset" to null
 
 QA: checkted how many rows of each exist to confirm # of total rows that need to be updated. 
 RESULT - city 
@@ -196,9 +192,6 @@ Notes:
   - I had asked a mentor if the revenue should be under the "money" data type in pgadmin, they weren't familiar with that data type and suggested to stick with decimal. 
 - a column constraint was added for the `userid` column for`not null`, however this returned an error when loading data. Logic for not null on this column is that if it is either a primary / foreign key, every row in the table should have a userid. It was meant as a preventative QA step. However was removed so that the load could be completed.
 - 
-
-
-Jan 20 @ 2045 - testing the git push went through. - B
 
 ## Query 3 - check for duplicates
 
@@ -384,9 +377,6 @@ sales_by_sku
 **RESULT: all 2 columns have 0% nulls**
 
 # Cleaning step 3: Dealing with duplicates in the analytics table
-
-Create new "unique key" column to filter out duplicates correctly. Will be based off visitid and unit-price-clean. 
-
 
 ```sql
 CREATE TABLE analytics_clean3 AS (
