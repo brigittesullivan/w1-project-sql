@@ -43,7 +43,7 @@ SELECT
  FROM "all_sessions"
  ```
 
- RESULT: the following columns show or 100% null values, will not be included in new clean table: 
+ RESULT: the following columns show 100% null values, will not be included in new clean table: 
 *  productrefundamount_null_num_perc = 100, 
 * itemquantity_null_num_per = 100, 
 * itemrevenue_null_num_perc = 100, 
@@ -51,7 +51,7 @@ SELECT
 
 After seeing 7 columns with 99% nulls, decided it was safe to also remove those columns. 
 * totaltransactionrevenue_null_num_perc = 99 
-* transactions_null_num_perc = 9 9
+* transactions_null_num_perc = 99
 * productquantity_null_num_perc = 99
 * productrevenue_null_num_perc = 99
 * transactionrevenue_null_num_perc = 99
