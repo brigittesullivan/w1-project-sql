@@ -1,11 +1,23 @@
-What issues will you address by cleaning the data?
+# What Issues will you address by cleaning the data:
 
-Queries:
+1. Improve ease of use by removing columns that add no value to the problems being solved (e.g., columns with 99%-100% null values)
+2. Increase quata quality by grouping “null-ish” values. For example, in the all_sessions table, under city there were values assigned to (not set), and also “not available in demo data set”. Any records with either of these values were updated to NULL, for best efficiency in analysis / reporting. 
+3. Correctly represent data in its proper unit of measure (e.g., “unit_price”, was cleaned to be represented in dollars, and cents
+4. Load data into pg admin, set best data types upon loading (that will not return errors, but also maintain data quality. 
+5. Maintain data integrity by creating “clean” table versions rather than overwriting raw data tables
+Improve accuracy of analysis  by removing any duplicate rows in tables
+
+
+# Queries:
 Below, provide the SQL queries you used to clean your data.
 
-# Query 1:
-## all sessions table
-0. check for columsn with 100% null values:
+## ISSUE 1: Remove columns with 100% NULL values
+* Check the percentage of null values for all columns in all_sessions (see: query_1.md) 
+* Applied the same steps to other tables
+* When clean tables are created, they will not include the columns identified as having all nulls. 
+* QA: used Excel to build long select statements consistently to cut down on typing and reduce typos
+
+### Query for issue 1: 
 ```sql
 SELECT  
 	 100*SUM(CASE WHEN "all_sessions"."fullVisitorId" IS NULL THEN 1 ELSE 0 END)/count(*) AS fullvisitorid_null_num_perc
@@ -43,7 +55,7 @@ SELECT
  FROM "all_sessions"
  ```
 
- RESULT: the following columns show 100% null values, will not be included in new clean table: 
+ RESULT: the following columns show or 100% null values, will not be included in new clean table: 
 *  productrefundamount_null_num_perc = 100, 
 * itemquantity_null_num_per = 100, 
 * itemrevenue_null_num_perc = 100, 
@@ -51,58 +63,49 @@ SELECT
 
 After seeing 7 columns with 99% nulls, decided it was safe to also remove those columns. 
 * totaltransactionrevenue_null_num_perc = 99 
-* transactions_null_num_perc = 99
+* transactions_null_num_perc = 9 9
 * productquantity_null_num_perc = 99
 * productrevenue_null_num_perc = 99
 * transactionrevenue_null_num_perc = 99
 * transactionid_null_num_perc = 99
 * ecommerceaction_option_null_num_perc = 99 
 
-### 2. Create new "clean" table version
 
-### 3. Update "null"ish values to one consistent null value. 
-COUNTRY
+## ISSUE 2: Address “Null-ish” values in the all_sessions_clean1 table
+* Created all_sessions_clean1 table
+* Multiple Null value types were present in the city and country columns
+* The following steps were applied for each column sequentially. 
+  * QA: checked how many rows of each null-ish exist to confirm # of total rows that need to be updated. When update query run, confirmed the # of values updated was 8,656
+  * RESULT - city 
+  * (not set) - 354
+  * Not available in demo data set = 8302
+  * TOTAL = 8,656
+ 
+### Query for issue 2: 
+
+**country column** 
+
+QA: Confirmed # of values that should be updated
+```sql 
+SELECT country, count(*)
+FROM all_sessions_clean1
+group by country 
+```
+RESULT: 24 (not set) values to be updated to NULL
+
 ```sql
 UPDATE all_sessions_clean1
 SET country = NULL
 WHERE "country" = '(not set)'
 ```
 
-Confirmed done correctly by running: 
+QA: Confirmed done correctly by running: 
 ```sql 
 SELECT country, count(*)
 FROM all_sessions_clean1
 group by country 
 ```
-And seeing 24 NULL values, all countries showing as "not set" are now NULL
-
-CITY
-
-```sql
-UPDATE all_sessions_clean1
-SET city = NULL
-WHERE city = '(not set)' 
-OR city = 'not available in demo dataset'
-```
-Result: update 8656 (8302 + 354)
-
-
-QA: e.g., - update "(not set)" and "not available in demo dataset" to null
-
-QA: checkted how many rows of each exist to confirm # of total rows that need to be updated. 
-RESULT - city 
-(not set) - 354
-Not available in demo data set = 8302
-
-```sql 
-SELECT distinct city, count(*) 
-from all_sessions_clean1
-GROUP BY city
-order by city
-```
-RESULT - country 
-(not set) - 24
-
+RESULT: 24 NULL values, all countries showing as "not set" are now NULL
 
 ```sql 
 SELECT distinct country, count(*) 
@@ -111,11 +114,33 @@ GROUP BY country
 order by country
 ```
 
+**city column** 
+QA: checkted how many rows of each exist to confirm # of total rows that need to be updated. 
+RESULT - city 
+(not set) - 354
+Not available in demo data set = 8302
 
 
-## analytics table
+```sql 
+SELECT distinct city, count(*) 
+from all_sessions_clean1
+GROUP BY city
+order by city
+```
 
-1. Create new "clean" table version
+```sql
+UPDATE all_sessions_clean1
+SET city = NULL
+WHERE city = '(not set)' 
+OR city = 'not available in demo dataset'
+```
+
+RESULT : SQL updated 8656 rows (8302 + 354)
+
+
+## ISSUE 3: Correct Unit of Measure for “unit_price”
+* 1. Create new "clean" table version with the cleaned unit_price
+### Query for issue 3: 
 ```sql
 -- create new clean table with only columns where null % under 100 (removed userid)
 CREATE TABLE analytics_clean1
@@ -143,26 +168,37 @@ ALTER TABLE analytics_clean1
 ADD COLUMN unit_price_clean numeric;
 ```
 
-3. Update column values based on unit_price 
+3. Update new column values based on unit_price 
 ```sql
 UPDATE analytics_clean1
 SET unit_price_clean = round("unit_price"/1000000,2)
 
 ```
 
-**QA STEP: run SELECT * FROM analytics_clean1 to confirm the column was calculated correctly. 
-
+**QA STEP: run 
 ```sql
-SELECT *, round("unit_price"/1000000,2) as unit_price_clean
-FROM analytics 
+SELECT * FROM analytics_clean1
 ```
+Confirmed the column was calculated correctly. 
+
 Note: I will use ```unit_price_clean``` to run any calculations.
 
 3. After perfomaing a QA check, I can confidently Drop original unit price from analytics_clean1. Since this is the "clean" version of the table, I decided It is best to only keep the "cleanest" versions of all data. Raw data still exists in the original analytics table for reference. 
 
+```sql
+ALTER TABLE analytics_clean1
+DROP COLUMN unit_price;
+```
 
 
-## Query 2: Loading data correctly into pgadmin
+
+
+
+## ISSUE 4: Load data into pg admin with data types
+* Query_4.md
+* Data types assigned before data is loaded, using data types as specific as possible without returning errors despite being a true 'int' fullvisitorid returned errors when a load was attempted when the column had data type set to int due to excel creating a scientific notation of the 19-digit #. 256 and 99 were used as standard character lengths. 
+
+### Query for issue 4: 
 
 ```sql 
 CREATE TABLE analytics (
@@ -183,19 +219,74 @@ CREATE TABLE analytics (
 );
 ```
 
+
+## ISSUE 5: Creating clean data tables
+* The data cleaning process only required new tables for `analytics` and `all_sessions`
+* Addressing nullish values was done after a clean table was created. 
+
+### Query for issue 5:
+### Creating clean analytics table
+
 ```sql
-ALTER TABLE analytics ADD "fullvisitorId" varchar(99);
+-- create new clean table with only columns where null % under 100 (removed userid)
+CREATE TABLE analytics_clean1
+AS 
+SELECT 
+ "visitnumber"
+, "visitid"
+, "visitstarttime"
+, "date"
+, "fullvisitorid"
+, "channelgrouping"
+, "socialengagementtype"
+, "units_sold"
+, "pageviews"
+, "timeonsite"
+, "bounces"
+, "revenue"
+, "unit_price"
+FROM analytics
+``` 
+### Creating clean all_sessions table
+
+```sql
+-- create new clean table with only columns where null % under 99 (removed 11 columns from original table)
+CREATE TABLE all_sessions_clean1
+AS 
+SELECT 
+"fullVisitorId"
+,"channelGrouping"
+,"time"
+,"country"
+,"city"
+,"timeonsite"
+,"pageviews"
+,"sessionqualitydim"
+,"date"
+,"visitid"
+,"type"
+,"productprice"
+,"productsku"
+,"v2productname"
+,"v2productcategory"
+,"productvariant"
+,"currencycode"
+,"pagetitle"
+,"pagepathlevel1"
+,"ecommerceaction_type"
+,"ecommerceaction_step"
+FROM all_sessions
 ```
 
-Notes:
-- despite being a true 'int' fullvisitorid returned errors when a load was attempted when the column had data type set to int due to excel creating a scientific notation of the 19-digit #. 256 and 99 were used as standard catch all character lengths. 
-  - I had asked a mentor if the revenue should be under the "money" data type in pgadmin, they weren't familiar with that data type and suggested to stick with decimal. 
-- a column constraint was added for the `userid` column for`not null`, however this returned an error when loading data. Logic for not null on this column is that if it is either a primary / foreign key, every row in the table should have a userid. It was meant as a preventative QA step. However was removed so that the load could be completed.
-- 
 
-## Query 3 - check for duplicates
+## ISSUE 6: Remove duplicate rows 
+* No duplicate rows found in products, sales_by_sku, or sales_report, all_sessions tables
+* Analytics Table
+  * bounces column excluded from analysis of dupes, since it would return errors. Didn't have time to resolve why
+  * QA: Used filtering of HAVING visitid = 1494861519 to make code more manageable to confirm the query was functioning the way I was expecting.
 
-### 3.1 sales by SKU table
+### Query for issue 6: 
+### 6.1 sales_by_SKU table
 
 ```sql
 -- Check for duplicates in the sales by sku table. 
@@ -218,7 +309,7 @@ FROM sales_by_sku
 GROUP BY "SKU", "total_ordered";
 ```
 
-### 3.2 products table
+### 6.2 products table
 ```sql 
 -- Check for duplicates in the PRODUCTS table 
 SELECT
@@ -261,8 +352,11 @@ GROUP BY 	"SKU"
 	, "sentimentScore"
 	, "sentimentMagnitude";
 
+-- Result: returns no rows with count > 1
+
 ```
-### 3.2 sales_report table
+
+### 6.3 sales_report table
 
 ```sql
 -- Check for duplicates in the SALES_REPORT table 
@@ -313,70 +407,11 @@ GROUP BY
 	, "ratio";
 ```
 
-
-### 3.2 sales_report table
--- no duplicates found, used same queries as 3.1 and 3.2
-
-### 3.3  analytics
-
-* Found duplicates in this table. No columns contained unique ID's. 
-* created a new clean table version to continue with data cleaning - "anatlytics_clean1"
-  * removed userid column since entire column had null values
-* in doing QA I would regularly filter by one visit id, to confirm that the queries were functioning as I expected them to. Since the data set is so large. Taking on visitid made it clearer to spot errors.  
-
-### 3.4 all_sessions 
-
-Cleaning Step 1:
-* create new clean table version
-* set proper null to city and country
+### 6.4 all_sessions
+(same query format as previous queries, no duplicates found)
 
 
-# Cleaning step 2: Find % NULL - products table
-```sql
--- find Null % fro products table, before creating new clean table
-SELECT
- 100*SUM(CASE WHEN "SKU" IS NULL THEN 1 ELSE 0 END)/count(*) AS sku_null_num_perc
-, 100*SUM(CASE WHEN "name" IS NULL THEN 1 ELSE 0 END)/count(*) AS name_null_num_perc
-, 100*SUM(CASE WHEN "orderedQuantity" IS NULL THEN 1 ELSE 0 END)/count(*) AS orderedquantity_null_num_perc
-, 100*SUM(CASE WHEN "stockLevel" IS NULL THEN 1 ELSE 0 END)/count(*) AS stocklevel_null_num_perc
-, 100*SUM(CASE WHEN "restockingLeadTime" IS NULL THEN 1 ELSE 0 END)/count(*) AS restockingleadtime_null_num_perc
-, 100*SUM(CASE WHEN "sentimentScore" IS NULL THEN 1 ELSE 0 END)/count(*) AS sentimentscore_null_num_perc
-, 100*SUM(CASE WHEN "sentimentMagnitude" IS NULL THEN 1 ELSE 0 END)/count(*) AS sentimentmagnitude_null_num_perc
-FROM products
-```
-**RESULT - all columns have 0% null values.**
-
-# Cleaning step 2: Find % NULL - sales_report table
-
-```sql
--- check null % for sales report table 
-SELECT
-100*SUM(CASE WHEN "productSKU" IS NULL THEN 1 ELSE 0 END)/count(*) AS productSKU_null_num_perc
-, 100*SUM(CASE WHEN "total_ordered" IS NULL THEN 1 ELSE 0 END)/count(*) AS total_ordered_null_num_perc
-, 100*SUM(CASE WHEN "name" IS NULL THEN 1 ELSE 0 END)/count(*) AS name_null_num_perc
-, 100*SUM(CASE WHEN "stockLevel" IS NULL THEN 1 ELSE 0 END)/count(*) AS stockLevel_null_num_perc
-, 100*SUM(CASE WHEN "restockingLeadTime" IS NULL THEN 1 ELSE 0 END)/count(*) AS restockingLeadTime_null_num_perc
-, 100*SUM(CASE WHEN "sentimentScore" IS NULL THEN 1 ELSE 0 END)/count(*) AS sentimentScore_null_num_perc
-, 100*SUM(CASE WHEN "sentimentMagnitude" IS NULL THEN 1 ELSE 0 END)/count(*) AS sentimentMagnitude_null_num_perc
-, 100*SUM(CASE WHEN "ratio" IS NULL THEN 1 ELSE 0 END)/count(*) AS ratio_null_num_perc
-FROM 
-sales_report
-```
-**RESULT - all columns have 0% null values, except ratio_null_num_perc with 17% NULL, still low enough to be considered in dtset.**
-
-# Cleaning step 2: Find % NULL - sales_by_sku
-
-```sql
--- check null % for sales_by_sku table 
-SELECT
-100*SUM(CASE WHEN "SKU" IS NULL THEN 1 ELSE 0 END)/count(*) AS productSKU_null_num_perc
-, 100*SUM(CASE WHEN "total_ordered" IS NULL THEN 1 ELSE 0 END)/count(*) AS total_ordered_null_num_perc
-FROM 
-sales_by_sku
-```
-**RESULT: all 2 columns have 0% nulls**
-
-# Cleaning step 3: Dealing with duplicates in the analytics table
+###  6.5 analytics
 
 ```sql
 CREATE TABLE analytics_clean3 AS (
@@ -445,76 +480,4 @@ GROUP BY
 	, "unit_price_clean"
 HAVING visitid = 1494861519
 ORDER BY unit_price_clean, count(*)
-```
 
-NOTE: bounces column excluded from analysis of dupes, since it would return errors. DIdn't have time to resolve why. 
-
-# Cleaning step 3: Dealing with duplicates in the all_sessions table
-
-all_sessions table has no duplicates (???)
-
-Confirmed by running. 
-```sql
-SELECT 
-	"fullVisitorId", 
-	"channelGrouping", 
-	"time", 
-	"country", 
-	"city", 
-	"timeonsite", 
-	"pageviews", 
-	"sessionqualitydim", 
-	"date", 
-	"visitid", 
- 	"type", 
-	"productprice", 
-	"productsku", 
-	"v2productname", 
-	"v2productcategory", 
-	"productvariant", 
-	"currencycode", 
-	"pagetitle", 
-	"pagepathlevel1", 
-	"ecommerceaction_type", 
-	"ecommerceaction_step",
-	COUNT(*)
-FROM all_sessions_clean1
-GROUP BY 
-	"fullVisitorId", 
-	"channelGrouping", 
-	"time", 
-	"country", 
-	"city", 
-	"timeonsite", 
-	"pageviews", 
-	"sessionqualitydim", 
-	"date", 
-	"visitid", 
- 	"type",
-	"productprice", 
-	"productsku",
-	"v2productname", 
-	"v2productcategory", 
-	"productvariant", 
-	"currencycode", 
-	"pagetitle", 
-	"pagepathlevel1", 
-	"ecommerceaction_type", 
-	"ecommerceaction_step"
-HAVING count(*) > 1
-ORDER BY "visitid" DESC
-```
-
-Also ran another query with, which did return duplicates, however has new columns were added to the search, the duplicates gradually went away. 
-```sql 
-"fullVisitorId", 
-	"channelGrouping", 
-	"time", 
-	"country", 
-	"city", 
-	"timeonsite", 
-	"pageviews", 
-	"sessionqualitydim", 
-	"date", 
-	"visitid", 
-```

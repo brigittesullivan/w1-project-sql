@@ -17,25 +17,7 @@ I find that all prices are set to $0.00.
 ### 2 - CLEANING  / QA STEP 
 Ran SELECT DIsctinct Country from all_sessions 
 
-CHECKED FOR ANY TYPOS IN spelling of country names 
-FOund these countries was not ported properly bc of accents:
-* REUNION
-* cote divoire 
 
-
-CHECKED FOR ANY TYPOS IN spelling of city names 
-FOund these cities was not ported properly bc of accents:
-* Am√£
-* San Francisco = South San Francisco ? ? 
-
-
-CHECKED CITY and Country disctinct: 
-``` sql
-SELECT distinct city, country FROM "all_sessions"
-ORDER BY country
-```
-
-Found a Toronto, United states
 
 ## IN ALL_SESSIONS 13 COLUMNS WITH SUM OF NULLS > 0 ARE... 
 -- SELECT 
